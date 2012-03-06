@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 from __future__ import division
@@ -6,6 +5,10 @@ from Tkinter import *
 import time
 import random
 
+"""
+ovire_list -> ovire_krog_list
+Krog -> Ovira_Krog
+"""
 
 
 lastx = 0
@@ -69,6 +72,8 @@ class Player:
         return False
 
     def preveri_premik(self, x, y):
+        if(x == 0 and y == 0):
+            return False
         self.premik(x, y)
         if ((self.y-self.r) < 0):
             self.premik(-x, -y)
@@ -91,6 +96,8 @@ class Player:
         return True
 
     def movement(self, vx, vy):
+        if(vx == 0 and vy == 0):
+            return False
         if(vx != 0 and vy != 0):
             self.preveri_premik(self.speed*vx/2**(0.5), self.speed*vy/2**(0.5))
         else:
@@ -99,11 +106,11 @@ class Player:
 
     def streljaj(self, x, y):
         global metki_list
-        metki_list.append(Metek(self.canvas, self.x, self.y, 5, 10, 0, x, y, "black"))
+        metki_list.append(Metek(self.canvas, self.x, self.y, 5, 350, 10, x, y, "black"))
         metki_list[-1].izris()
 
 
-class Krog:
+class Ovira_Krog:
     def __init__ (self, canvas, x, y, r):
         self.canvas = canvas
         self.x = x
@@ -111,7 +118,7 @@ class Krog:
         self.r = r
 
     def izris(self):
-        self.index = self.canvas.create_oval(self.x - self.r,self.y - self.r,self.x + self.r, self.y + self.r, fill="brown", outline="black", width = 2)
+        self.index = self.canvas.create_oval(self.x - self.r,self.y - self.r,self.x + self.r, self.y + self.r, fill="red", outline="black", width = 2)
     
 
 class Metek:
@@ -122,26 +129,178 @@ class Metek:
         self.r = r
         self.speed = speed
         self.dmg = dmg
-        self.vx =(destx-self.x)
-        self.vy =(desty-self.y)
         self.color = color
+
+        
+        tx = abs(self.x - destx)
+        ty = abs(self.y - desty)
+        self.vx = -(tx/(self.x-destx))*tx/((tx**2+ty**2)**(1/2))
+        self.vy = -(ty/(self.y-desty))*ty/((tx**2+ty**2)**(1/2))
+
+        #print(self.vx, self.vy, abs(self.vx+self.vy))
+        
+        
+        
         
     def izris(self):
         self.index = self.canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r, fill=self.color, outline="black", width = 0)
     def update(self, t):
+        #print("Update!")
         #self.premik(1,1)
-        self.premik(self.vx*t, self.vy*t)
-        self.canvas.delete(self.index)
-        self.izris()
+        self.premik(self.vx*t*self.speed, self.vy*t*self.speed)
+        if (self.zunaj() == False and self.zadeni() == False and self.zombij() == False):
+            self.canvas.delete(self.index)
+            self.izris()
+       
     def premik(self, x, y):
         self.x += x
         self.y += y
+        
     def kill(self):
         self.canvas.delete(self.index)
         metki_list.remove(self)
+
+    def col_krog(self, ovira):
+        if(((self.x-ovira.x)**2 + (self.y-ovira.y)**2)**0.5 < self.r + ovira.r):
+            #print("Zaletavam se")
+            return True
+        return False
+    def zadeni(self):
+        for ovira in ovire_list:
+            if(self.col_krog(ovira) == True):
+                self.kill()
+                return True
+        return False
+
+    def zombij(self):
+        for zombij in zombij_list:
+            #print("Yo")
+            if(self.col_krog(zombij) == True):
+                self.kill()
+                zombij.ranjen(self.dmg)
+                return True
+        return False
+    
+    def zunaj(self):
+        if ((self.x+self.r)<0 or (self.x-self.r)>X):
+            self.kill()
+            return True
+        elif((self.y+self.r)<0 or (self.y-self.r)>Y):
+            self.kill()
+            return True
+        else:
+            return False
     #def move(self, x, y, speed):
         
-     
+#############################################################################################################################
+
+#class HealthBar:
+   # def __init__(self, canvas):
+    #    self.canvas = canvas
+    
+  #  def izris_frame(self)
+     #   self.index = self.canvas.create_rectangle(x1, y1, x2, y2, outline = 'black', width = 2)
+        
+    #def izris_hp(self)
+      #  self.index = self.canvas.create_rectangle(x1+1, y1+1, xhp, y2-1, fill = 'red')
+
+        
+class Zombij:
+    def __init__(self, canvas, x, y, r, speed, health, dmg):
+        self.canvas = canvas
+        self.x = x
+        self.y = y
+        self.r = r
+        self.speed = speed
+        self.health = health
+        self.dmg = dmg
+        self.vx = 0
+        self.vy = 0
+       # self.hpbar = HealthBar()
+
+    #def update_hpbar(self):
+        #hpbar.izris_frame(int(-self.r*1.5), 
+
+    def izris(self):
+        self.index = self.canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r, fill="yellow", outline="black", width = 1)
+        
+
+    def update(self, t):
+        self.update_dest()
+        if(self.preveri_premik(self.vx*t*self.speed, self.vy*t*self.speed) == True):
+            self.canvas.delete(self.index)
+            self.izris()
+
+    def ranjen(self, hp):
+        self.health -= hp
+        if(self.health <= 0):
+            print("Kill")
+            self.kill()
+            
+    def preveri_zivljenje(self):
+        if(self.health() <= 0):
+            self.kill()
+
+    def kill(self):
+        self.canvas.delete(self.index)
+        zombij_list.remove(self)
+
+    def premik(self, x, y):
+        self.x += x
+        self.y += y
+
+    def zbudi_metek(self):
+        for metek in metki_list:
+            if ((((self.x-metek.x)**2+(self.y-metek.y)**2)**0.5)<300):
+                return True
+
+    def update_dest(self):
+        if (((((self.x-ply.x)**2+(self.y-ply.y)**2)**0.5)<300)or(self.zbudi_metek()==True)):
+            try:
+                tx = abs(self.x - ply.x)
+                ty = abs(self.y - ply.y)
+                self.vx = -(tx/(self.x-ply.x))*tx/((tx**2+ty**2)**(1/2))
+                self.vy = -(ty/(self.y-ply.y))*ty/((tx**2+ty**2)**(1/2))
+            except ZeroDivisionError:
+                pass
+        else:
+            self.vx = 0
+            self.vy = 0
+
+        #print(self.vx, self.vy)
+
+    
+
+    def col_krog(self, ovira):
+        if(((self.x-ovira.x)**2 + (self.y-ovira.y)**2)**0.5 < self.r + ovira.r):
+            #print("Zaletavam se")
+            return True
+        return False
+
+    def preveri_premik(self, x, y):
+        if(x == 0 and y == 0):
+            return False
+        self.premik(x, y)
+        if ((self.y-self.r) < 0):
+            self.premik(-x, -y)
+            return False
+        if ((self.y+self.r) >=Y):
+            self.premik(-x, -y)
+            return False
+        if ((self.x+self.r) >= X):
+            self.premik(-x, -y)
+            return False
+        if ((self.x-self.r) < 0):
+            self.premik(-x, -y)
+            return False
+
+        for ovira in ovire_list:
+            if(self.col_krog(ovira) == True):
+                self.premik(-x, -y)
+                return False
+
+        return True
+    
 
 
 
@@ -172,23 +331,27 @@ def update(old):
     vx = 0
     vy = 0
     for ply in player_list:
-        if('Up' in keys):
+        if 'w' in keys or 'Up' in keys:
             #ply.gor(x - old)
             vy -= tmp
-        if 'Down' in keys:
+        if 's' in keys or 'Down' in keys:
             #ply.dol(x - old)
             vy += tmp
-        if 'Left' in keys:
+        if 'a' in keys or 'Left' in keys:
             #ply.levo(x - old)
             vx -= tmp
-        if 'Right' in keys:
+        if 'd' in keys or 'Right' in keys:
             #ply.desno(x - old)
             vx += tmp
         #print(vx, vy)
-        ply.movement(vx, vy)
+        if(vx != 0 or vy != 0):
+            ply.movement(vx, vy)
 
     for metek in metki_list:
         metek.update(tmp)
+
+    for zombij in zombij_list:
+        zombij.update(tmp)
         
     root.after(1, update, t)
 
@@ -208,7 +371,7 @@ mouse
 """
 
 def mouse_input(event):
-    print ("clicked at", event.x, event.y)
+#    print ("clicked at", event.x, event.y)
     ply.streljaj(event.x, event.y)
     
 
@@ -217,15 +380,15 @@ def mouse_input(event):
 keys = []
 player_list = []
 ovire_list = []
+zombij_list = []
 metki_list = []
 
 nice_blue = "#00A2FF"  
-X=800
-Y=600
+X=1000
+Y=900
 root = Tk()
 canvas = Canvas(root, bg="green", width=X, height=Y)
 canvas.pack()
-
 
 
 
@@ -237,11 +400,32 @@ ply.izris()
 
 
 ############## USTVARI KROG ########################
+
+############## RANDOM LEVEL ########################
+
 for i in range (10):
-    ovira = Krog(canvas, random.randint(100, 700), random.randint(100, 500), 20)
+    ovira = Ovira_Krog(canvas, random.randint(150, X-100), random.randint(150, Y-100), random.randint(10, 50))
     ovire_list.append(ovira)
     ovira.izris()
 
+#self, canvas, x, y, r, speed, health, dmg)
+
+for i in range(20):
+    r = random.randint(10,50)
+    zombij_list.append(Zombij(canvas, random.randint(r, X-r), random.randint(r, Y-r), r, random.randint(10,250), 20, 10))
+    zombij_list[-1].izris()
+
+"""
+zombij = Zombij(canvas, 600, 400, 40, 100, 20, 0)
+zombij_list.append(zombij)
+zombij.izris()
+
+zombij = Zombij(canvas, 300, 200, 40, 0, 20, 0)
+zombij_list.append(zombij)
+zombij.izris()
+"""
+
+#!!!!!!!!!!!!! RANDOM LEVEL !!!!!!!!!!!!!!!!!!!!!!!#
 
 #ply2 = Player(canvas, 100,100,60,500)
 #player_list.append(ply2)
