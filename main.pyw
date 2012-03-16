@@ -47,7 +47,7 @@ class Player:
         self.y = y
 
     def izris(self):
-        self.index = self.canvas.create_oval(self.x - self.r,self.y - self.r,self.x + self.r, self.y + self.r, fill="blue", outline="red", width = 0)
+        self.index = self.canvas.create_oval(self.x - self.r,self.y - self.r,self.x + self.r, self.y + self.r, fill=('#450505'), outline="red", width = 0)
 
     def premik(self, x, y):
         self.x += x
@@ -109,6 +109,16 @@ class Player:
         metki_list.append(Metek(self.canvas, self.x, self.y, 5, 350, 10, x, y, "black"))
         metki_list[-1].izris()
 
+#########################################################################################################################  tukaj je to ################
+'''
+class Weapon:
+    def __init__(self, dmg, rof, rng, x, y):
+        self.dmg = dmg
+        self.rof = rof
+        self.range = rng
+    def streljaj(self):
+'''
+##########################################################
 
 class Ovira_Krog:
     def __init__ (self, canvas, x, y, r):
@@ -118,8 +128,9 @@ class Ovira_Krog:
         self.r = r
 
     def izris(self):
-        self.index = self.canvas.create_oval(self.x - self.r,self.y - self.r,self.x + self.r, self.y + self.r, fill="red", outline="black", width = 2)
-    
+        self.index = self.canvas.create_oval(self.x - self.r,self.y - self.r,self.x + self.r, self.y + self.r, fill=('#202020'))
+
+###########################################################    
 
 class Metek:
     def __init__(self, canvas, x, y, r, speed, dmg, destx, desty, color):
@@ -134,8 +145,13 @@ class Metek:
         
         tx = abs(self.x - destx)
         ty = abs(self.y - desty)
-        self.vx = -(tx/(self.x-destx))*tx/((tx**2+ty**2)**(1/2))
-        self.vy = -(ty/(self.y-desty))*ty/((tx**2+ty**2)**(1/2))
+        try:
+            self.vx = -(tx/(self.x-destx))*tx/((tx**2+ty**2)**(1/2))
+            self.vy = -(ty/(self.y-desty))*ty/((tx**2+ty**2)**(1/2))
+        except ZeroDivisionError:
+            print('ustrelil si tocno v sredino samega sebe')
+            self.vx =0
+            self.vy =0
 
         #print(self.vx, self.vy, abs(self.vx+self.vy))
         
@@ -193,20 +209,51 @@ class Metek:
     #def move(self, x, y, speed):
         
 #############################################################################################################################
-
-#class HealthBar:
-   # def __init__(self, canvas):
-    #    self.canvas = canvas
+'''
+class HpBar:
+    def __init__(self, canvas):
+        self.canvas = canvas
     
-  #  def izris_frame(self)
-     #   self.index = self.canvas.create_rectangle(x1, y1, x2, y2, outline = 'black', width = 2)
-        
-    #def izris_hp(self)
-      #  self.index = self.canvas.create_rectangle(x1+1, y1+1, xhp, y2-1, fill = 'red')
+    def izris_frame(self,zombijx, zombijy, zombijr):
+        self = self.canvas.create_rectangle(zombijx-(zombijr*0.9), zombijy-(zombijr+15), zombijx+(zombijr*0.9), zombijy-(zombijr+5), outline = 'black', width = 2)
 
+    def kill(self):
+        #print('to se zgodi')
+        self.canvas.delete(self.index)
+############################################
+    def hpbar_refresh(self):
+        if self.hpbar_create == True:
+                self.hpbar_kill()
+                self.hpbar_izris()
+        else:
+            self.hpbar_create()
+    def hpbar_create(self):
+        hpbar_list.append
+        return True
+    def hpbar_izris(self):
+        self = self.canvas.create_rectangle(self.x-(self.r*0.9), self.y-(self.r+15), self.x+(self.r*0.9), self.y-(self.r+5), outline = 'black', width = 2)
+    def hpbar_kill(self):
+        self.canvas.remove(self.index)
+        hpbar_list.remove(self)
+    ##############################################
+
+    def hpbar_create(self):
+        hpbar_list.append(HpBar(canvas))
+
+    def hpbar_refresh(self):
+        try:
+            self.hpbar.kill()
+            self.hpbar.izris_frame(self.x, self.y, self.r)
+            print ('izrise')
+        except AttributeError:
+            pass
+
+    '''
+    
+#????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
         
 class Zombij:
-    def __init__(self, canvas, x, y, r, speed, health, dmg):
+    def __init__(self, canvas, x, y, r, speed, health, dmg,):
         self.canvas = canvas
         self.x = x
         self.y = y
@@ -216,20 +263,25 @@ class Zombij:
         self.dmg = dmg
         self.vx = 0
         self.vy = 0
-       # self.hpbar = HealthBar()
+        
+        
 
     #def update_hpbar(self):
-        #hpbar.izris_frame(int(-self.r*1.5), 
-
-    def izris(self):
-        self.index = self.canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r, fill="yellow", outline="black", width = 1)
-        
+        #hpbar.izris_frame(int(-self.r*1.5),
 
     def update(self, t):
         self.update_dest()
         if(self.preveri_premik(self.vx*t*self.speed, self.vy*t*self.speed) == True):
             self.canvas.delete(self.index)
             self.izris()
+             
+
+    def izris(self):
+        self.index = self.canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r, fill= ('#055505'), outline="black", width = 1)
+
+
+
+        
 
     def ranjen(self, hp):
         self.health -= hp
@@ -300,9 +352,8 @@ class Zombij:
                 return False
 
         return True
-    
-
-
+  
+        
 
 
             
@@ -324,6 +375,7 @@ def key(event):
 
 def updateEvent(event):
     update(time.time())
+
 
 def update(old):
     t = time.time()
@@ -358,7 +410,7 @@ def update(old):
 def keyPressHandler(event):
     if(event.keysym not in keys):
         keys.append(event.keysym)
-
+    
 def keyReleaseHandler(event):
     if(event.keysym in keys):
         keys.remove(event.keysym)
@@ -376,7 +428,7 @@ def mouse_input(event):
     
 
 
-
+hpbar_list = []
 keys = []
 player_list = []
 ovire_list = []
@@ -387,7 +439,7 @@ nice_blue = "#00A2FF"
 X=1000
 Y=900
 root = Tk()
-canvas = Canvas(root, bg="green", width=X, height=Y)
+canvas = Canvas(root, bg=('#807777'), width=X, height=Y)
 canvas.pack()
 
 
@@ -399,14 +451,16 @@ player_list.append(ply)
 ply.izris()
 
 
-############## USTVARI KROG ########################
 
-############## RANDOM LEVEL ########################
+
+#===============postavi okrogle ovire========================#
 
 for i in range (10):
     ovira = Ovira_Krog(canvas, random.randint(150, X-100), random.randint(150, Y-100), random.randint(10, 50))
     ovire_list.append(ovira)
     ovira.izris()
+
+#===============ustvari zombije==============================#
 
 #self, canvas, x, y, r, speed, health, dmg)
 
@@ -414,6 +468,12 @@ for i in range(20):
     r = random.randint(10,50)
     zombij_list.append(Zombij(canvas, random.randint(r, X-r), random.randint(r, Y-r), r, random.randint(10,250), 20, 10))
     zombij_list[-1].izris()
+
+def spawn_zombij(event):
+    r = random.randint(10,50)
+    zombij_list.append(Zombij(canvas, random.randint(r, X-r), random.randint(r, Y-r), r, random.randint(10,250), 20, 10))
+    zombij_list[-1].izris()
+
 
 """
 zombij = Zombij(canvas, 600, 400, 40, 100, 20, 0)
@@ -427,19 +487,14 @@ zombij.izris()
 
 #!!!!!!!!!!!!! RANDOM LEVEL !!!!!!!!!!!!!!!!!!!!!!!#
 
-#ply2 = Player(canvas, 100,100,60,500)
-#player_list.append(ply2)
-#ply2.izris()
 
+#================GLOBALNE TIPKE======================#
 canvas.bind("<Button-1>", mouse_input)
-root.bind_all("<space>", ply.nastavi(100, 100))
+root.bind_all("<space>", spawn_zombij)
 root.bind_all("<Button-3>", destroy)
-#root.bind_all("<Key>", key)
 root.bind_all("<KeyPress>", keyPressHandler)
 root.bind_all("<KeyRelease>", keyReleaseHandler)
-#root.bind_all("<Button-1>", updateEvent)
-#canvas.bind("<Button-1>", izris)
-#canvas.bind("<B1-Motion>", izris)
+
 
 update(time.time())
 
@@ -448,3 +503,4 @@ update(time.time())
 #canvas.bind("A", delete)
 
 root.mainloop()
+
