@@ -213,82 +213,63 @@ class Metek:
     #def move(self, x, y, speed):
         
 #############################################################################################################################
-'''
+#'''
 class HpBar:
-    def __init__(self, canvas):
+    def __init__(self, canvas, zombij):
         self.canvas = canvas
+        self.zombij = zombij
+        self.izrisi = False
     
-    def izris_frame(self,zombijx, zombijy, zombijr):
-        self = self.canvas.create_rectangle(zombijx-(zombijr*0.9), zombijy-(zombijr+15), zombijx+(zombijr*0.9), zombijy-(zombijr+5), outline = 'black', width = 2)
+    def izris_frame(self):
+        self.frame_index = self.canvas.create_rectangle(self.zombij.x-(self.zombij.r*0.9), self.zombij.y-(self.zombij.r+15), self.zombij.x+(self.zombij.r*0.9), self.zombij.y-(self.zombij.r+5), outline = 'black', width = 2)
+    def izris_hpbar(self):
+        self.hpbar_index = self.canvas.create_rectangle(self.zombij.x-(self.zombij.r*0.9), self.zombij.y-(self.zombij.r+15), (self.zombij.x+(self.zombij.r*0.9)) - self.zombij.r*1.8*(1 - (self.zombij.health/self.zombij.maxhp)), self.zombij.y-(self.zombij.r+5), fill="red")
+
+    def izris(self):
+        self.izris_frame()
+        self.izris_hpbar()
 
     def kill(self):
-        #print('to se zgodi')
-        self.canvas.delete(self.index)
-############################################
-    def hpbar_refresh(self):
-        if self.hpbar_create == True:
-                self.hpbar_kill()
-                self.hpbar_izris()
-        else:
-            self.hpbar_create()
-    def hpbar_create(self):
-        hpbar_list.append
-        return True
-    def hpbar_izris(self):
-        self = self.canvas.create_rectangle(self.x-(self.r*0.9), self.y-(self.r+15), self.x+(self.r*0.9), self.y-(self.r+5), outline = 'black', width = 2)
-    def hpbar_kill(self):
-        self.canvas.remove(self.index)
-        hpbar_list.remove(self)
-    ##############################################
+        self.canvas.delete(self.frame_index)
+        self.canvas.delete(self.hpbar_index)
+    
+    def update(self):
+        self.kill()
+        self.izris()
 
-    def hpbar_create(self):
-        hpbar_list.append(HpBar(canvas))
-
-    def hpbar_refresh(self):
-        try:
-            self.hpbar.kill()
-            self.hpbar.izris_frame(self.x, self.y, self.r)
-            print ('izrise')
-        except AttributeError:
-            pass
-
-    '''
     
 #????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
         
 class Zombij:
-    def __init__(self, canvas, x, y, r, speed, health, dmg,):
+    def __init__(self, canvas, x, y, r, speed, health, dmg):
         self.canvas = canvas
         self.x = x
         self.y = y
         self.r = r
         self.speed = speed
+        self.maxhp = health
         self.health = health
         self.dmg = dmg
         self.vx = 0
         self.vy = 0
-        
+        self.hpBar = HpBar(self.canvas, self)
+        self.hpBar.izris()
         
 
-    #def update_hpbar(self):
-        #hpbar.izris_frame(int(-self.r*1.5),
 
     def update(self, t):
         self.update_dest()
         if(self.preveri_premik(self.vx*t*self.speed, self.vy*t*self.speed) == True):
             self.canvas.delete(self.index)
             self.izris()
-             
+            self.hpBar.update() 
 
     def izris(self):
         self.index = self.canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r, fill= ('#055505'), outline="black", width = 1)
 
-
-
-        
-
     def ranjen(self, hp):
         self.health -= hp
+        self.hpBar.update()
         if(self.health <= 0):
             print("Kill")
             self.kill()
@@ -300,6 +281,7 @@ class Zombij:
     def kill(self):
         self.canvas.delete(self.index)
         zombij_list.remove(self)
+        self.hpBar.kill()
 
     def premik(self, x, y):
         self.x += x
@@ -470,12 +452,12 @@ for i in range (10):
 
 for i in range(20):
     r = random.randint(10,50)
-    zombij_list.append(Zombij(canvas, random.randint(r, X-r), random.randint(r, Y-r), r, random.randint(10,250), 20, 10))
+    zombij_list.append(Zombij(canvas, random.randint(r, X-r), random.randint(r, Y-r), r, random.randint(10,250), random.randint(10,100), 10))
     zombij_list[-1].izris()
 
 def spawn_zombij(event):
     r = random.randint(10,50)
-    zombij_list.append(Zombij(canvas, random.randint(r, X-r), random.randint(r, Y-r), r, random.randint(10,250), 20, 10))
+    zombij_list.append(Zombij(canvas, random.randint(r, X-r), random.randint(r, Y-r), r, random.randint(10,250), random.randint(10,100), 10))
     zombij_list[-1].izris()
 
 
