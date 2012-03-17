@@ -150,8 +150,8 @@ class Metek:
             self.vy = -(ty/(self.y-desty))*ty/((tx**2+ty**2)**(1/2))
         except ZeroDivisionError:
             print('ustrelil si tocno v sredino samega sebe')
-            self.vx =0
-            self.vy =0
+            self.vx = 0
+            self.vy = 0
 
         #print(self.vx, self.vy, abs(self.vx+self.vy))
         
@@ -161,6 +161,10 @@ class Metek:
     def izris(self):
         self.index = self.canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r, fill=self.color, outline="black", width = 0)
     def update(self, t):
+        #Ce se metek nikamor ne premika, ga izbrisi, drugace nam ko ustrelimo v sredino metki vedno ostanejo tam
+        if(self.vx == 0 and self.vy == 0):
+            self.kill()
+            return 0
         #print("Update!")
         #self.premik(1,1)
         self.premik(self.vx*t*self.speed, self.vy*t*self.speed)
