@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division, print_function
+from math import *
 from Tkinter import *
 import time
 import random
@@ -97,6 +98,7 @@ class Player:
     def nastavi(self, x, y):
         self.x = x
         self.y = y
+        self.melee()
 
     def update(self):
         if(('r' in keys) and (not self.reloading)):
@@ -106,12 +108,25 @@ class Player:
         if(self.reloading == True):
             self.weapon.rld()
             self.rldbar.update()
+        self.melee()
         
         self.col_zombij()
         self.canvas.delete(self.index)
         self.izris()
         #print(self.hp)
-        
+
+    def melee(self):
+        #print('delam')
+        if 'f' in keys:
+            for zombij in zombij_list:
+                try:
+                    #if mouseX/mouseY == zombij.x/zombij.y and (((self.x-zombij.x)**2+(self.y-zombij.y)**2)**0.5) > 100:
+                    #if mouseX/mouseY == zombij.x/zombij.y +- and (((self.x-zombij.x)**2+(self.y-zombij.y)**2)**0.5) > 100:
+                    if zombij.x-zombij.r <= mouseX and mouseX <= zombij.x+zombij.r and zombij.y-zombij.r <= mouseY and mouseY <= zombij.y+zombij.r and (((self.x-zombij.x)**2+(self.y-zombij.y)**2)**0.5) < 100:
+                    #if(((self.x-zombij.x)**2+(self.y-zombij.y)**2)**0.5) > 100:
+                        zombij.ranjen(100)
+                except:
+                    zombij.ranjen(100)
     def col_zombij(self):
         for ovira in zombij_list:
             if(((self.x-ovira.x)**2 + (self.y-ovira.y)**2)**0.5 < self.r + ovira.r):
@@ -219,7 +234,7 @@ class rldBar:
             self.frame_index = self.canvas.create_rectangle(self.player.x-(self.player.r*0.9), self.player.y-(self.player.r+15), self.player.x+(self.player.r*0.9), self.player.y-(self.player.r+5), outline = 'black', width = 2)
     def izris_rldbar(self):
         if(self.player.weapon.rld_t != None):
-            self.rldbar_index = self.canvas.create_rectangle(self.player.x-(self.player.r*0.9), self.player.y-(self.player.r+15), (self.player.x+(self.player.r*0.9)) - self.player.r*1.8*(1 - (time.time() - self.player.weapon.rld_t)/self.player.weapon.rldt), self.player.y-(self.player.r+5), fill="#0077bb")
+            self.rldbar_index = self.canvas.create_rectangle(self.player.x-(self.player.r*0.9), self.player.y-(self.player.r+15), (self.player.x+(self.player.r*0.9)) - self.player.r*1.8*(1 - (time.time() - self.player.weapon.rld_t)/self.player.weapon.rldt), self.player.y-(self.player.r+6), fill="#0077bb")
 
     def izris(self):
         self.izris_frame()
@@ -260,28 +275,94 @@ class Weapon:
         self.spread = spread
 
         
+#    def streljaj(self):
+#        global metki_list
+#        if(self.player.reloading == False):
+## v = tan(spread/2)*(((self.x - self.player.x)**2 + (self.y - self.player.y)**2)**0.5)
+## if (self.x-self.player.x < 0 and self.y-self.player.y >= 0):
+## x1 -= self.x - self.player.x
+## y1 += self.y - self.player.y
+## #elif (self.x-self.player.x >= 0 and self.y-self.player.y < 0):
+            
+##            for i in range(self.cluster):
+##                #self.x += 20
+##                self.calc_spread()
+##                metki_list.append(Metek(self.canvas, self.player.x, self.player.y, self.r, self.speed, self.dmg, self.vx, self.vy, "black", playerr = self.player.r))
+##        for i in metki_list[-self.cluster:]:
+##            i.izris()
+##        #metki_list[-1].izris()
+##    def calc_spread(self):
+##        tx = abs(self.player.x - self.x)
+##        ty = abs(self.player.y - self.y)
+##        try:
+##            self.vx = -(tx/(self.player.x-self.x))*tx/((tx**2+ty**2)**(1/2))
+##            self.vy = -(ty/(self.player.y-self.y))*ty/((tx**2+ty**2)**(1/2))
+##        except ZeroDivisionError:
+##            print('ustrelil si tocno v sredino samega sebe')
+##            self.vx = 0
+##            self.vy = 0
     def streljaj(self):
         global metki_list
         if(self.player.reloading == False):
-            self.x -= 220
-            for i in range(self.cluster):
-                self.x += 20
+            if self.cluster >1:
                 self.calc_spread()
+            else:
+                tx = abs(self.player.x - self.x)
+                ty = abs(self.player.y - self.y)
+                try:
+                    self.vx = -(tx/(self.player.x-self.x))*tx/((tx**2+ty**2)**(1/2))
+                    self.vy = -(ty/(self.player.y-self.y))*ty/((tx**2+ty**2)**(1/2))
+                except ZeroDivisionError:
+                    print('ustrelil si tocno v sredino samega sebe')
+                    self.vx = 0
+                    self.vy = 0
+                global metki_list
                 metki_list.append(Metek(self.canvas, self.player.x, self.player.y, self.r, self.speed, self.dmg, self.vx, self.vy, "black", playerr = self.player.r))
-        for i in metki_list[-self.cluster:]:
-            i.izris()
-        #metki_list[-1].izris()
+                metki_list[-1].izris()
+
     def calc_spread(self):
-        tx = abs(self.player.x - self.x)
-        ty = abs(self.player.y - self.y)
+        r = ((self.player.x - mouseX)**2 + (self.player.y - mouseY)**2)**0.5
+        tx = abs(self.player.x - mouseX)
+        ty = abs(self.player.y - mouseY)
         try:
-            self.vx = -(tx/(self.player.x-self.x))*tx/((tx**2+ty**2)**(1/2))
-            self.vy = -(ty/(self.player.y-self.y))*ty/((tx**2+ty**2)**(1/2))
+            self.vx = -(tx/(self.player.x-mouseX))*tx/((tx**2+ty**2)**(1/2))
+            self.vy = -(ty/(self.player.y-mouseY))*ty/((tx**2+ty**2)**(1/2))
         except ZeroDivisionError:
-            print('ustrelil si tocno v sredino samega sebe')
+            print('ne mores streljat')
             self.vx = 0
             self.vy = 0
+        x = r * tan((self.spread/2)/360*2*pi)
+        d = 2*x
+        wx = -(self.vy)
+        wy = self.vx
+        Ax = mouseX + (wx * x)
+        Ay = mouseY + (wy * x)
+        foo = d/(self.cluster -1)
+        #print(mouseX, mouseY)
+        #print(self.vx, self.vy, wx, wy)
+        global metki_list
+        for i in range(self.cluster - 1):
+            #print(Ax, Ay)
+            tx = abs(self.player.x - Ax)
+            ty = abs(self.player.y - Ay)
+            self.vx = -(tx/(self.player.x-Ax))*tx/((tx**2+ty**2)**(1/2))
+            self.vy = -(ty/(self.player.y-Ay))*ty/((tx**2+ty**2)**(1/2))
+            #print(self.vx, self.vy)
+            metki_list.append(Metek(self.canvas, self.player.x, self.player.y, self.r, self.speed, self.dmg, self.vx, self.vy, "black", playerr = self.player.r))
+            metki_list[-1].izris()
+            Ax += foo * (-wx)
+            Ay += foo * (-wy)
+            #self.vx = -(Ax/(self.player.x-mouseX))*Ax/((Ax**2+Ay**2)**(1/2))
+            #self.vy = -(Ay/(self.player.y-mouseY))*Ay/((Ax**2+Ay**2)**(1/2))
 
+        tx = abs(self.player.x - Ax)
+        ty = abs(self.player.y - Ay)
+        self.vx = -(tx/(self.player.x-Ax))*tx/((tx**2+ty**2)**(1/2))
+        self.vy = -(ty/(self.player.y-Ay))*ty/((tx**2+ty**2)**(1/2))    
+        metki_list.append(Metek(self.canvas, self.player.x, self.player.y, self.r, self.speed, self.dmg, self.vx, self.vy, "black", playerr = self.player.r))
+        metki_list[-1].izris()
+
+        #print("--------------------")
 
 
             
@@ -335,21 +416,21 @@ class Metek:
 
 
         """
-        tx = abs(self.x - destx)
-        ty = abs(self.y - desty)
-        try:
-            self.vx = -(tx/(self.x-destx))*tx/((tx**2+ty**2)**(1/2))
-            self.vy = -(ty/(self.y-desty))*ty/((tx**2+ty**2)**(1/2))
-        except ZeroDivisionError:
-            print('ustrelil si tocno v sredino samega sebe')
-            self.vx = 0
-            self.vy = 0
-        #print("{0}, {1}\n".format(self.x, self.y))
+tx = abs(self.x - destx)
+ty = abs(self.y - desty)
+try:
+self.vx = -(tx/(self.x-destx))*tx/((tx**2+ty**2)**(1/2))
+self.vy = -(ty/(self.y-desty))*ty/((tx**2+ty**2)**(1/2))
+except ZeroDivisionError:
+print('ustrelil si tocno v sredino samega sebe')
+self.vx = 0
+self.vy = 0
+#print("{0}, {1}\n".format(self.x, self.y))
 
-        self.x += self.playerr * self.vx
-        self.y += self.playerr * self.vy
+self.x += self.playerr * self.vx
+self.y += self.playerr * self.vy
 
-        """
+"""
         
 
         #print("{0}, {1}\n".format(self.x, self.y))
@@ -424,7 +505,7 @@ class HpBar:
     def izris_frame(self):
         self.frame_index = self.canvas.create_rectangle(self.zombij.x-(self.zombij.r*0.9), self.zombij.y-(self.zombij.r+15), self.zombij.x+(self.zombij.r*0.9), self.zombij.y-(self.zombij.r+5), outline = 'black', width = 2)
     def izris_hpbar(self):
-        self.hpbar_index = self.canvas.create_rectangle(self.zombij.x-(self.zombij.r*0.9), self.zombij.y-(self.zombij.r+15), (self.zombij.x+(self.zombij.r*0.9)) - self.zombij.r*1.8*(1 - (self.zombij.health/self.zombij.maxhp)), self.zombij.y-(self.zombij.r+5), fill="red")
+        self.hpbar_index = self.canvas.create_rectangle(self.zombij.x-(self.zombij.r*0.9), self.zombij.y-(self.zombij.r+15), (self.zombij.x+(self.zombij.r*0.9)) - self.zombij.r*1.8*(1 - (self.zombij.health/self.zombij.maxhp))-1, self.zombij.y-(self.zombij.r+5) - 1, fill="red")
 
     def izris(self):
         self.izris_frame()
@@ -668,12 +749,12 @@ def update(old):
         ply.weapon.update()
 
 def keyPressHandler(event):
-    if(event.keysym not in keys):
-        keys.append(event.keysym)
+    if(event.keysym.lower() not in keys):
+        keys.append(event.keysym.lower())
     
 def keyReleaseHandler(event):
-    if(event.keysym in keys):
-        keys.remove(event.keysym)
+    if(event.keysym.lower() in keys):
+        keys.remove(event.keysym.lower())
 
 #####################################
 """
@@ -707,6 +788,7 @@ def mouseRelease(event):
     #print(keys)
 
 def mouseUpdate(event):
+    #print(event.x, event.y)
     global mouseX, mouseY
     mouseX = event.x
     mouseY = event.y
@@ -730,15 +812,17 @@ Y=900
 root = Tk()
 canvas = Canvas(root, bg=('#807777'), width=X, height=Y)
 canvas.pack()
+canvas.focus_force()
 
-#(self,dmg, rof, r, speed, mag, rldt, canvas = canvas, player = ply)
+#(self,dmg, rof, r, speed, mag, rldt, canvas = canvas, player = cluster = 1, spread = 0)
 
 ############# USTVARI IGRALCA ######################
 ply = Player(canvas, 100, 100, 35, 300, 20, 20)
 
 Uzi = Weapon(3, 0.05, 3, 350, 20, 1, canvas, ply)
 DPistola = Weapon(150, 1, 4, 1000, 3, 3, canvas, ply)
-Shotgun = Weapon(10, 0.5, 5, 200, 6, 1, canvas, ply, cluster = 10, spread = 60)
+Shotgun = Weapon(10, 0.1, 5, 200, 500, 1, canvas, ply, cluster = 5, spread = 60)
+
 
 
 ply.weaponInit(Shotgun)
@@ -793,13 +877,15 @@ zombij.izris()
 #================GLOBALNE TIPKE======================#
 canvas.bind("<ButtonPress-1>", mousePress)
 canvas.bind("<ButtonRelease-1>", mouseRelease)
-canvas.bind("<B1-Motion>", mouseUpdate)
+canvas.bind("<Motion>", mouseUpdate)
 root.bind_all("<space>", spawn_zombij)
 root.bind_all("q", ugasni)
+root.bind_all("Q", ugasni)
 root.bind_all("<KeyPress>", keyPressHandler)
 root.bind_all("<KeyRelease>", keyReleaseHandler)
-root.bind_all("f", kilall)
+root.bind_all("x", kilall)
 
+root.title("Streljanka zombijev")
 
 update(time.time())
 
