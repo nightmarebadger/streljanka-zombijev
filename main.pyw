@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division, print_function
+import os
 from math import *
 from Tkinter import *
 import time
@@ -540,20 +541,20 @@ class Zombij:
         self.bo_udaril = True
         self.t = 0
         self.frekvenca_napadanja = frekvenca_napadanja
-        
-
+        self.index = None
 
     def update(self, t):
         self.update_dest()
         self.napadi()
         self.col_ply()
         if(self.preveri_premik(self.vx*t*self.speed, self.vy*t*self.speed) == True):
-            self.canvas.delete(self.index)
             self.izris()
             #if self.hp##################################################################################################
             self.hpBar.update()
 
     def izris(self):
+        if self.index is not None:
+            self.canvas.delete(self.index)
         self.index = self.canvas.create_oval(self.x - self.r, self.y - self.r, self.x + self.r, self.y + self.r, fill= ('#055505'), outline="black", width = 1)
 
     def napadi(self):
@@ -562,9 +563,9 @@ class Zombij:
                 self.bo_udaril = True
 
     def col_ply(self):
-        if(((self.x-ply.x)**2 + (self.y-ply.y)**2)**0.5 < self.r + ply.r):
+        if(((self.x-player.x)**2 + (self.y-player.y)**2)**0.5 < self.r + player.r):
             if self.bo_udaril == True:
-                ply.ranjen(self.dmg)
+                player.ranjen(self.dmg)
                 self.bo_udaril = False
                 self.t = time.time()
         
@@ -598,20 +599,20 @@ class Zombij:
     def update_dest(self):
         if(self.jezen):
             try:
-                tx = abs(self.x - ply.x)
-                ty = abs(self.y - ply.y)
-                self.vx = -(tx/(self.x-ply.x))*tx/((tx**2+ty**2)**(1/2))
-                self.vy = -(ty/(self.y-ply.y))*ty/((tx**2+ty**2)**(1/2))
+                tx = abs(self.x - player.x)
+                ty = abs(self.y - player.y)
+                self.vx = -(tx/(self.x-player.x))*tx/((tx**2+ty**2)**(1/2))
+                self.vy = -(ty/(self.y-player.y))*ty/((tx**2+ty**2)**(1/2))
             except ZeroDivisionError:
                 pass
         else:
-            if (((((self.x-ply.x)**2+(self.y-ply.y)**2)**0.5)<300)or(self.zbudi_metek()==True)):
+            if (((((self.x-player.x)**2+(self.y-player.y)**2)**0.5)<300)or(self.zbudi_metek()==True)):
                 self.jezen = True
                 try:
-                    tx = abs(self.x - ply.x)
-                    ty = abs(self.y - ply.y)
-                    self.vx = -(tx/(self.x-ply.x))*tx/((tx**2+ty**2)**(1/2))
-                    self.vy = -(ty/(self.y-ply.y))*ty/((tx**2+ty**2)**(1/2))
+                    tx = abs(self.x - player.x)
+                    ty = abs(self.y - player.y)
+                    self.vx = -(tx/(self.x-player.x))*tx/((tx**2+ty**2)**(1/2))
+                    self.vy = -(ty/(self.y-player.y))*ty/((tx**2+ty**2)**(1/2))
                 except ZeroDivisionError:
                     pass
             else:
@@ -696,13 +697,13 @@ def destroy(event):
 '''
 def key(event):
 if event.keysym == 'Up':
-ply.gor()
+player.gor()
 if event.keysym == "Down":
-ply.dol()
+player.dol()
 if event.keysym == "Left":
-ply.levo()
+player.levo()
 if event.keysym == "Right":
-ply.desno()
+player.desno()
 '''
 #####################
 
@@ -711,28 +712,28 @@ def updateEvent(event):
 
 
 def update(old):
+    global player
     t = time.time()
     tmp = t - old
     vx = 0
     vy = 0
-
-    for ply in player_list[:]:
-        if 'w' in keys or 'Up' in keys:
-            #ply.gor(x - old)
-            vy -= tmp
-        if 's' in keys or 'Down' in keys:
-            #ply.dol(x - old)
-            vy += tmp
-        if 'a' in keys or 'Left' in keys:
-            #ply.levo(x - old)
-            vx -= tmp
-        if 'd' in keys or 'Right' in keys:
-            #ply.desno(x - old)
-            vx += tmp
-        #print(vx, vy)
-        if(vx != 0 or vy != 0):
-            ply.movement(vx, vy)
-        ply.update()
+    #print(keys)
+    if 'w' in keys or 'Up' in keys:
+        #player.gor(x - old)
+        vy -= tmp
+    if 's' in keys or 'Down' in keys:
+        #player.dol(x - old)
+        vy += tmp
+    if 'a' in keys or 'Left' in keys:
+        #player.levo(x - old)
+        vx -= tmp
+    if 'd' in keys or 'Right' in keys:
+        #player.desno(x - old)
+        vx += tmp
+    #print(vx, vy)
+    if(vx != 0 or vy != 0):
+        player.movement(vx, vy)
+    player.update()
 
     for metek in metki_list[:]:
         metek.update(tmp)
@@ -740,13 +741,12 @@ def update(old):
     for zombij in zombij_list[:]:
         zombij.update(tmp)
 
-    for ply in player_list[:]:
-        ply.hpBar.update()
+    player.hpBar.update()
     
     root.after(1, update, t)
 
     if("Mouse1" in keys):
-        ply.weapon.update()
+        player.weapon.update()
 
 def keyPressHandler(event):
     if(event.keysym.lower() not in keys):
@@ -755,6 +755,69 @@ def keyPressHandler(event):
 def keyReleaseHandler(event):
     if(event.keysym.lower() in keys):
         keys.remove(event.keysym.lower())
+
+def beri_trojko(line):
+    deli = line.split()
+    return int(deli[0][1:-1]), int(deli[1][:-1]), int(deli[2][:-1])
+
+def parse_ovire_krog(lines, canvas):
+    objs = []
+    while lines:
+        line = lines.pop().strip()
+        try:
+            x, y, r = beri_trojko(line)
+            objs.append(Ovira_Krog(canvas, x, y, r))
+        except ValueError:
+            lines.append(line)
+            break
+    return objs
+
+def parse_zombiji(lines, canvas):
+    objs = []
+    while lines:
+        line = lines.pop().strip()
+        print(line)
+        try:
+            x, y, r = beri_trojko(line)
+            objs.append(Zombij(canvas, x, y, r, random.randint(10,250), random.randint(10,100), 5, 3))
+        except ValueError:
+            lines.append(line)
+            break
+    return objs
+
+def parse_player(line, canvas):
+    deli = line.split()
+    return Player(canvas, int(deli[0][1:-1]), int(deli[1][:-1]), 35, 300, 20, 20)
+    
+
+def load_lvl(canvas):
+    player_list = None
+    ovire_list = []
+    zombiji_list = []
+    if os.path.exists('lvl.lvl'):
+        lines = open('lvl.lvl').readlines()
+        lines.reverse()
+        while lines:
+            line = lines.pop().strip()
+            if line == "[ovira_krog]":
+                ovire_list = parse_ovire_krog(lines, canvas)
+            elif line == "[zombij]":
+                zombiji_list = parse_zombiji(lines, canvas)
+            elif line == "[player]":
+                player = parse_player(lines.pop().strip(), canvas)
+            else:
+                pass # comment lines, empty lines
+    return player, ovire_list, zombiji_list
+                                
+def zvrst(obj):
+    global current
+    if obj == '[ovira_krog]':
+        current = 'Ovira_Krog','ovire_list'
+    elif obj == '[zombij]':
+        current = 'Zombij','zombij_list'
+    elif obj == '[player]':
+        current = 'Player', 'player_list'
+        
 
 #####################################
 """
@@ -765,7 +828,7 @@ mouse
 
 #def mouse_input(event):
 # print ("clicked at", event.x, event.y)
-    #ply.streljaj(event.x, event.y)
+    #player.streljaj(event.x, event.y)
 
 def mousePress(event):
     global mouseX, mouseY
@@ -797,9 +860,6 @@ def mouseUpdate(event):
 
 hpbar_list = []
 keys = []
-player_list = []
-ovire_list = []
-zombij_list = []
 metki_list = []
 rldbar_list = []
 
@@ -817,31 +877,32 @@ canvas.focus_force()
 #(self,dmg, rof, r, speed, mag, rldt, canvas = canvas, player = cluster = 1, spread = 0)
 
 ############# USTVARI IGRALCA ######################
-ply = Player(canvas, 100, 100, 35, 300, 20, 20)
+player, ovire_list, zombij_list = load_lvl(canvas)
+#player = Player(canvas, 100, 100, 35, 300, 20, 20)
 
-Uzi = Weapon(3, 0.05, 3, 350, 20, 1, canvas, ply)
-DPistola = Weapon(150, 1, 4, 1000, 3, 3, canvas, ply)
-Shotgun = Weapon(10, 0.1, 5, 200, 500, 1, canvas, ply, cluster = 5, spread = 60)
+for i in ovire_list:
+    i.izris()
 
+Uzi = Weapon(3, 0.05, 3, 350, 20, 1, canvas, player)
+DPistola = Weapon(150, 1, 4, 1000, 3, 3, canvas, player)
+Shotgun = Weapon(10, 0.1, 5, 200, 500, 1, canvas, player, cluster = 5, spread = 60)
 
-
-ply.weaponInit(Shotgun)
-player_list.append(ply)
-ply.izris()
+player.weaponInit(Shotgun)
+player.izris()
 
 
 
 #===============postavi okrogle ovire========================#
 
-for i in range (10):
-    ovira = Ovira_Krog(canvas, random.randint(150, X-100), random.randint(150, Y-100), random.randint(10, 50))
-    ovire_list.append(ovira)
-    ovira.izris()
+##for i in range (10):
+##    ovira = Ovira_Krog(canvas, random.randint(150, X-100), random.randint(150, Y-100), random.randint(10, 50))
+##    ovire_list.append(ovira)
+##    ovira.izris()
 
 #===============ustvari zombije==============================#
 
 #self, canvas, x, y, r, speed, health, dmg)
-
+'''
 for i in range(1):
     r = random.randint(10,50)
     zombij_list.append(Zombij(canvas, random.randint(r, X-r), random.randint(r, Y-r), r, random.randint(10,250), random.randint(10,100), 5, 3))
@@ -851,9 +912,10 @@ def spawn_zombij(event):
     r = random.randint(10,50)
     zombij_list.append(Zombij(canvas, random.randint(r, X-r), random.randint(r, Y-r), r, random.randint(10,250), random.randint(10,100), 5, 3))
     zombij_list[-1].izris()
+'''
 def kilall(event):
     for i in zombij_list[:]:
-        if ((((i.x-ply.x)**2+(i.y-ply.y)**2)**0.5)<300):
+        if ((((i.x-player.x)**2+(i.y-player.y)**2)**0.5)<300):
             i.kill()
 
 def ugasni(event):
